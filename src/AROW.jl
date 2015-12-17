@@ -13,6 +13,40 @@ type Classifier
   end
 end
 
+type MultiClassifier
+  n_class::UInt64
+  arows::Array{Classifier, 1}
+
+  function MultiClassifier(dimension, num_classes, param = 1.0)
+    arows = []
+    for i=1:num_classes
+      push!(arows, Classifier(dimension, param))
+    end
+    new(num_classes, arows)
+  end
+end
+
+function fit{T<:AbstractArray}(classifier::MultiClassifier, x::T, label::Int)
+  for i=1:classifier.n_class
+    if i == label
+      fit(classifier.arows[i], x, 1)
+    elseif rand() <= 1.0 / (classifier.n_class - 1)
+      fit(classifier.arows[i], x, -1)
+    end
+  end
+end
+
+function predict{T<:AbstractArray}(classifier::MultiClassifier, x::T)
+  results = []
+
+  for i=1:classifier.n_class
+    score = dot(classifier.arows[i].mean, x)
+    push!(results, score)
+  end
+
+  indmax(results)
+end
+
 function fit{T<:AbstractArray}(arow::Classifier, x::T, label::Int)
   assert(label == 1 || label == -1);
 
@@ -40,6 +74,5 @@ end
 function predict{T<:AbstractArray}(arow::Classifier, x::T)
   ifelse(dot(arow.mean, x) > 0, 1, -1)
 end
-
 
 end # module
