@@ -1,6 +1,6 @@
 module AROW
 
-export fit, predict
+export fit, predict, composition, composition!
 
 type Classifier
   dim::UInt64
@@ -73,6 +73,21 @@ end
 
 function predict{T<:AbstractArray}(arow::Classifier, x::T)
   ifelse(dot(arow.mean, x) > 0, 1, -1)
+end
+
+function composition!(x::MultiClassifier, y::MultiClassifier)
+  for i=1:x.n_class
+    composition!(x.arows[i], y.arows[i])
+  end
+end
+
+function composition!(x::Classifier, y::Classifier)
+  for i=1:x.dim
+    x.mean[i] = (x.mean[i] + y.mean[i]) / 2
+    x.cov[i] = (x.cov[i] + y.cov[i]) / 2
+  end
+
+  return
 end
 
 end # module
