@@ -1,6 +1,8 @@
 using AROW
 using Base.Test
 
+using SVMLightLoader
+
 function test_iris()
   iris = Array{Float64}[
     [5.1,3.5,1.4,0.2,-1],
@@ -136,4 +138,27 @@ function test_iris()
   end
 end
 
+function test_news20()
+  dim = 62061
+  arow = AROW.MultiClassifier(dim, 20, 0.1)
+
+  for (v, label) in SVMLightFile("data/news20.scale", dim)
+    fit(arow, vec(full(v)), Int(label))
+  end
+
+  num = 0
+  correct = 0
+  for (v, label) in SVMLightFile("data/news20.t.scale", dim)
+    result = predict(arow, vec(full(v)))
+
+    if(result == Int(label)) 
+      correct += 1
+    end
+    num += 1
+  end
+
+  @test correct / num >= 0.7
+end
+
 test_iris()
+test_news20()
